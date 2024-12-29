@@ -1,14 +1,20 @@
 import { useMemo, useState } from 'react';
 
 interface ResultsProps {
+    playerName: string;
     typed: string[][];
     paragraph: string[];
     time?: number;
 }
 
-export const useMultiplayerResult  = ({ typed, paragraph, time = 30 }: ResultsProps) => {
+export const useMultiplayerResult  = ({ playerName, typed, paragraph, time = 30 }: ResultsProps) => {
 
-    const [results, setResults] = useState({ rawWPM: 0, correctWPM: 0, accuracy: 0 });
+    const [results, setResults] = useState({ 
+        playerName : playerName,
+        rawWPM: 0, 
+        correctWPM: 0, 
+        accuracy: 0 
+    });
 
     useMemo(() => {
         let typedWords = typed.length;
@@ -27,7 +33,7 @@ export const useMultiplayerResult  = ({ typed, paragraph, time = 30 }: ResultsPr
         const correctWPM = Math.round(correctWords/ minutes);
         const accuracy = Math.round((correctWords / typedWords) * 100)
 
-        setResults({ rawWPM, correctWPM, accuracy });
+        setResults({ playerName ,rawWPM, correctWPM, accuracy });
 
         return { rawWPM, correctWPM, accuracy };
     }, [typed, paragraph, time]);

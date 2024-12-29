@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import '../styles/BlinkingCursor.css'
 
 interface CursorProps {
     wordIndex: number;

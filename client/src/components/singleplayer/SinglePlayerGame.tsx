@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useParagraph } from "../../../helpers/useParagraph";
-import BlinkingCursor from "./BlinkingCursor";
+import { useParagraph } from "../../helpers/useParagraph";
+import BlinkingCursor from "../../utils/BlinkingCursor";
 import Results from "./Results";
 
-const Logic = () => {
+const SinglePlayerGame = () => {
     const { paragraph } = useParagraph();
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
@@ -172,11 +172,10 @@ const Logic = () => {
                             currentWordLength={getCurrentWordLength()}
                         />
                     </div>
-                    
                 </>
             )}
         </>
     );
 };
 
-export default Logic;
+export default SinglePlayerGame;

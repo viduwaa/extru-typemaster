@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useParagraph } from "../helpers/useParagraph";
-import MultiplayerLogic from "./MultiplayerLogic";
-import Lobby from "./Lobby";
+import { useParagraph } from "../../helpers/useParagraph";
+import Lobby from "../Lobby";
 import io, { Socket } from "socket.io-client";
+import MultiplayerTest from "./MultiplayerTest";
 
 const socket = io("http://localhost:3001", {
     withCredentials: true,
@@ -14,21 +14,25 @@ const MultiplayerGame: React.FC = () => {
     const [players, setPlayers] = useState<string[]>([]);
     const { paragraph } = useParagraph();
     const [gameStarted, setGameStarted] = useState(false);
-	const [gameParagraph, setGameParagraph] = useState<string[]>([]);
+    const [gameParagraph, setGameParagraph] = useState<string[]>([]);
+    const [playerName, setPlayerName] = useState<string>("");
 
     useEffect(() => {
         socket.on("gameCreated", (id: string) => {
             setGameId(id);
         });
 
-        socket.on("playerJoined", (updatedPlayers: string[] , gameId : string) => {
-            setPlayers(updatedPlayers);
-			setGameId(gameId)
-        });
+        socket.on(
+            "playerJoined",
+            (updatedPlayers: string[], gameId: string) => {
+                setPlayers(updatedPlayers);
+                setGameId(gameId);
+            }
+        );
 
         socket.on("gameStarted", (gameParagraph: string[]) => {
             setGameStarted(true);
-			setGameParagraph(gameParagraph);
+            setGameParagraph(gameParagraph);
         });
 
         socket.on("joinError", (error: string) => {
@@ -45,10 +49,12 @@ const MultiplayerGame: React.FC = () => {
     }, []);
 
     const createGame = (playerName: string) => {
+        setPlayerName(playerName);
         socket.emit("createGame", playerName);
     };
 
     const joinGame = (id: string, playerName: string) => {
+        setPlayerName(playerName);
         socket.emit("joinGame", { gameId: id, playerName });
     };
 
@@ -84,11 +90,12 @@ const MultiplayerGame: React.FC = () => {
                 </div>
             )}
             {gameId && gameStarted && (
-                <MultiplayerLogic
+                <MultiplayerTest
                     gameId={gameId}
                     players={players}
                     paragraph={gameParagraph}
                     socket={socket}
+                    playerName={playerName}
                 />
             )}
         </div>

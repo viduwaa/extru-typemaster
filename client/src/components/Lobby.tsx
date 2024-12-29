@@ -1,21 +1,46 @@
 import React, { useState } from "react";
 
 interface LobbyProps {
-    createGame: (playerName: string) => void;
-    joinGame: (id: string, playerName: string) => void;
+    createGame: (
+        playerID: string,
+        playerName: string,
+        additionalInfo: {
+            university: string;
+            role: string;
+            isSchoolStudent: boolean;
+        }
+    ) => void;
+    joinGame: (
+        id: string,
+        playerName: string,
+        playerID: string,
+        additionalInfo: {
+            university: string;
+            role: string;
+            isSchoolStudent: boolean;
+        }
+    ) => void;
 }
 
 const Lobby: React.FC<LobbyProps> = ({ createGame, joinGame }) => {
     const [gameId, setGameId] = useState("");
     const [playerName, setPlayerName] = useState("");
+    const [playerID, setPlayerID] = useState("");
+    const [university, setUniversity] = useState("");
+    const [role, setRole] = useState("");
+    const [isSchoolStudent, setIsSchoolStudent] = useState(false);
 
     const handleCreateGame = () => {
-        createGame(playerName);
+        const uniqueId = Math.random().toString(36).substring(7);
+        setPlayerID(uniqueId);
+        createGame(playerID,playerName, { university, role, isSchoolStudent });
     };
 
     const handleJoinGame = () => {
         if (playerName && gameId) {
-            joinGame(gameId, playerName);
+            const uniqueId = Math.random().toString(36).substring(7);
+            setPlayerID(uniqueId);
+            joinGame(gameId, playerID, playerName, { university, role, isSchoolStudent });
         }
     };
 
@@ -30,6 +55,59 @@ const Lobby: React.FC<LobbyProps> = ({ createGame, joinGame }) => {
                     onChange={(e) => setPlayerName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
+            </div>
+            <div className="mb-4">
+                <select
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select university (optional)</option>
+                    <option value="RUSL">
+                        Rajarata University of Sri Lanka
+                    </option>
+                    <option value="UoC">University of Colombo</option>
+                    <option value="UoP">University of Peradeniya</option>
+                    <option value="UoK">University of Kelaniya</option>
+                    <option value="UoJ">University of Jaffna</option>
+                    <option value="USJP">
+                        University of Sri Jayewardenepura
+                    </option>
+                    <option value="UoM">University of Moratuwa</option>
+
+                    <option value="OUSL">
+                        The Open University of Sri Lanka
+                    </option>
+                    <option value="EUSL">
+                        Eastern University of Sri Lanka
+                    </option>
+                    <option value="SUSL">
+                        Sabaragamuwa University of Sri Lanka
+                    </option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div className="mb-4">
+                <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select role (optional)</option>
+                    <option value="student">Student</option>
+                    <option value="staff">Staff</option>
+                    <option value="lecturer">Lecturer</option>
+                </select>
+            </div>
+            <div className="mb-4 flex items-center">
+                <input
+                    type="checkbox"
+                    id="isSchoolStudent"
+                    checked={isSchoolStudent}
+                    onChange={(e) => setIsSchoolStudent(e.target.checked)}
+                    className="mr-2"
+                />
+                <label htmlFor="isSchoolStudent">I am a school student</label>
             </div>
             <div className="mb-4">
                 <button

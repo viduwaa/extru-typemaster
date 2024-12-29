@@ -29,6 +29,7 @@ interface Game {
   paragraph: string[];
   started: boolean;
   progress: { [key: string]: number };
+  results: any[];
 }
 
 const games: { [key: string]: Game } = {};
@@ -43,7 +44,8 @@ io.on('connection', (socket) => {
       players: [playerName],
       paragraph: [], // We'll set this when the game starts
       started: false,
-      progress: {}
+      progress: {},
+      results:[]
     };
     socket.join(gameId);
     socket.emit('gameCreated', gameId);
@@ -76,6 +78,16 @@ io.on('connection', (socket) => {
       io.to(gameId).emit('progressUpdated', game.progress);
     }
   });
+
+  socket.on('gameEnded', ({ gameId, results }: { gameId: string, results: any }) => {
+    const game = games[gameId];
+    if(game){
+      console.log("Before push:", game.results);
+      game.results.push(results)
+      console.log("After push:", game.results);
+      io.to(gameId).emit('gameResults', game.results);
+    }
+  })
 
   socket.on('disconnect', () => {
     console.log('User disconnected');

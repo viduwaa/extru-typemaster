@@ -1,37 +1,65 @@
 import React, { useMemo, useState, useEffect } from "react";
-import BlinkingCursor from "./controllers/BlinkingCursor";
-import { Socket } from 'socket.io-client';
-import {useMultiplayerResult} from "../../helpers/useMultiplayerResult";
+import BlinkingCursor from "../../utils/BlinkingCursor";
+import { Socket } from "socket.io-client";
+import { useMultiplayerResult } from "../../helpers/useMultiplayerResult";
+import MultiPlayerEndScreen from "./MultiPlayerEndScreen";
 
 interface MultiplayerLogicProps {
-  gameId: string;
-  players: string[];
-  paragraph: string[];
-  socket: Socket;
+    gameId: string;
+    players: string[];
+    paragraph: string[];
+    socket: Socket;
+    playerName: string;
 }
 
-const MultiplayerLogic: React.FC<MultiplayerLogicProps>= ({ gameId, players, paragraph, socket }) => {
+type ResultsProps = {
+    playerName: string;
+    rawWPM: number;
+    correctWPM: number;
+    accuracy: number;
+};
+
+const MultiplayerTest: React.FC<MultiplayerLogicProps> = ({
+    gameId,
+    players,
+    paragraph,
+    socket,
+    playerName,
+}) => {
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
     const [tracking, setTracking] = useState<string[][]>([]);
     const [timer, setTimer] = useState(30);
     const [isStarted, setIsStarted] = useState(false);
     const [endGame, setEndGame] = useState(false);
+    const [finalResults, setFinalResults] = useState<ResultsProps[]>([]);
 
-
-    const {results} = useMultiplayerResult({
-        typed: tracking, 
-        paragraph, 
-        time: timer
+    const { results } = useMultiplayerResult({
+        playerName,
+        typed: tracking,
+        paragraph,
+        time: 30,
     });
 
-
-    const gameEnded = ()=>{
-        if(timer === 0){
-            socket.emit('gameEnded', {gameId, results , playerName: players[0]});
+    const gameEnded = () => {
+        if (timer === 0) {
+            socket.emit("gameEnded", { gameId, results });
             setEndGame(true);
         }
-    }
+    };
+
+    useEffect(() => {
+        if (endGame) {
+            socket.on("gameResults", (results: ResultsProps[]) => {
+                setFinalResults(results);
+                console.log("Received results:", results);
+            });
+        }
+
+        return () => {
+            socket.off("gameResults");
+        };
+    }, [socket, endGame]);
 
     const correctOrIncorrect = (wordIndex: number, letterIndex: number) => {
         if (tracking[wordIndex] === undefined) return "text-gray-400";
@@ -178,7 +206,10 @@ const MultiplayerLogic: React.FC<MultiplayerLogicProps>= ({ gameId, players, par
             {timer === 0 ? (
                 <>
                     <div className="timer">Game Over</div>
-                                      
+                    <MultiPlayerEndScreen
+                        gameId={gameId}
+                        results={finalResults}
+                    />
                 </>
             ) : (
                 <>
@@ -198,11 +229,10 @@ const MultiplayerLogic: React.FC<MultiplayerLogicProps>= ({ gameId, players, par
                             currentWordLength={getCurrentWordLength()}
                         />
                     </div>
-                    
                 </>
             )}
         </>
     );
 };
 
-export default MultiplayerLogic;
+export default MultiplayerTest;
