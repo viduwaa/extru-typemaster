@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { useParagraph } from "../../helpers/useParagraph";
 import Lobby from "../Lobby";
-import io, { Socket } from "socket.io-client";
+import io from "socket.io-client";
 import MultiplayerTest from "./MultiplayerTest";
+import { LobbyProps } from "../Lobby";
 
 const socket = io("http://localhost:3001", {
     withCredentials: true,
     transports: ["websocket", "polling"],
 });
 
+interface Player {
+    id: string;
+    name: string;
+    avatar: string;
+}
+
 const MultiplayerGame: React.FC = () => {
     const [gameId, setGameId] = useState<string | null>(null);
-    const [players, setPlayers] = useState<string[]>([]);
+    const [players, setPlayers] = useState<Player[]>([]);
     const { paragraph } = useParagraph();
     const [gameStarted, setGameStarted] = useState(false);
     const [gameParagraph, setGameParagraph] = useState<string[]>([]);
     const [playerName, setPlayerName] = useState<string>("");
+
 
     useEffect(() => {
         socket.on("gameCreated", (id: string) => {
@@ -24,10 +32,13 @@ const MultiplayerGame: React.FC = () => {
 
         socket.on(
             "playerJoined",
-            (updatedPlayers: string[], gameId: string) => {
+            (
+                updatedPlayers: { id: string; name: string; avatar: string }[],
+                gameId: string,
+            ) => {
                 setPlayers(updatedPlayers);
                 setGameId(gameId);
-            }
+            },
         );
 
         socket.on("gameStarted", (gameParagraph: string[]) => {
@@ -48,14 +59,36 @@ const MultiplayerGame: React.FC = () => {
         };
     }, []);
 
-    const createGame = (playerName: string) => {
+    const createGame: LobbyProps["createGame"] = (
+        playerID,
+        playerName,
+        additionalInfo,
+    ) => {
         setPlayerName(playerName);
-        socket.emit("createGame", playerName);
+        setPlayers([
+            {
+                id: playerID,
+                name: playerName,
+                avatar: additionalInfo.selectedAvatar,
+            },
+        ]);
+        console.log(playerID, playerName, additionalInfo);
+        socket.emit("createGame", { playerID, playerName, additionalInfo });
     };
 
-    const joinGame = (id: string, playerName: string) => {
+    const joinGame: LobbyProps["joinGame"] = (
+        gameId,
+        playerName,
+        playerID,
+        additionalInfo,
+    ) => {
         setPlayerName(playerName);
-        socket.emit("joinGame", { gameId: id, playerName });
+        socket.emit("joinGame", {
+            gameId,
+            playerName,
+            playerID,
+            additionalInfo,
+        });
     };
 
     const startGame = () => {
@@ -65,24 +98,40 @@ const MultiplayerGame: React.FC = () => {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container relative mx-auto px-4 py-8">
             {!gameId && <Lobby createGame={createGame} joinGame={joinGame} />}
             {gameId && !gameStarted && (
-                <div className="bg-white shadow-md rounded-lg p-6">
-                    <h2 className="text-2xl font-bold mb-4">
+                <div className="rounded-lg bg-white p-6 shadow-md">
+                    <h2 className="mb-4 text-2xl font-bold">
                         Waiting for players...
                     </h2>
                     <p className="mb-2">
                         Game ID:{" "}
-                        <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                        <span className="rounded bg-gray-100 px-2 py-1 font-mono">
                             {gameId}
                         </span>
                     </p>
-                    <p className="mb-4">Players: {players.join(", ")}</p>
+                    <p className="mb-4">Players: </p>
+                   
+                    <div className="flex">
+                        {players.map((player) => (
+                            <div
+                                className="flex flex-col items-center gap-2"
+                                key={player.id}
+                            >
+                                <img
+                                    src={player.avatar}
+                                    className="h-28 w-28 rounded-full"
+                                />
+                                <span className="font-semibold">{player.name}</span>
+                            </div>
+                        ))}
+                    </div>
+
                     {players.length >= 2 && (
                         <button
                             onClick={startGame}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                            className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
                         >
                             Start Game
                         </button>

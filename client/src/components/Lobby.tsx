@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import PopupForm from "./multiplayer/PopupForm";
 
-interface LobbyProps {
+export interface LobbyProps {
     createGame: (
         playerID: string,
         playerName: string,
@@ -8,6 +9,7 @@ interface LobbyProps {
             university: string;
             role: string;
             isSchoolStudent: boolean;
+            selectedAvatar:string
         }
     ) => void;
     joinGame: (
@@ -18,123 +20,130 @@ interface LobbyProps {
             university: string;
             role: string;
             isSchoolStudent: boolean;
+            selectedAvatar:string
         }
     ) => void;
 }
 
 const Lobby: React.FC<LobbyProps> = ({ createGame, joinGame }) => {
     const [gameId, setGameId] = useState("");
-    const [playerName, setPlayerName] = useState("");
-    const [playerID, setPlayerID] = useState("");
-    const [university, setUniversity] = useState("");
-    const [role, setRole] = useState("");
-    const [isSchoolStudent, setIsSchoolStudent] = useState(false);
+    const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+    const [isCreatingGame, setIsCreatingGame] = useState(false);
+    const [warning, setWarning] = useState(false);
+    const [vibrating, setVibrating] = useState(false);
 
-    const handleCreateGame = () => {
-        const uniqueId = Math.random().toString(36).substring(7);
-        setPlayerID(uniqueId);
-        createGame(playerID,playerName, { university, role, isSchoolStudent });
+    const handleCreateGame = (
+        playerName: string,
+        additionalInfo: {
+            university: string;
+            role: string;
+            isSchoolStudent: boolean;
+            selectedAvatar:string
+        }
+    ) => {
+        const playerID = Math.random().toString(36).substring(7);
+        createGame(playerID, playerName, additionalInfo);
+        setIsOverlayVisible(false);
     };
 
-    const handleJoinGame = () => {
-        if (playerName && gameId) {
-            const uniqueId = Math.random().toString(36).substring(7);
-            setPlayerID(uniqueId);
-            joinGame(gameId, playerID, playerName, { university, role, isSchoolStudent });
+    const handleJoinGame = (
+        playerName: string,
+        additionalInfo: {
+            university: string;
+            role: string;
+            isSchoolStudent: boolean;
+            selectedAvatar:string
+        }
+    ) => {
+        if (gameId) {
+            const playerID = Math.random().toString(36).substring(7);
+            joinGame(gameId, playerName, playerID, additionalInfo);
+            setIsOverlayVisible(false);
+        }
+    };
+
+    const showCreateGamePopup = () => {
+        setIsCreatingGame(true);
+        setIsOverlayVisible(true);
+    };
+
+    const showJoinGamePopup = () => {
+        if (gameId) {
+            setIsCreatingGame(false);
+            setIsOverlayVisible(true);
+        } else {
+            setWarning(true);
+            setVibrating(true);
+            setTimeout(() => setVibrating(false), 300);
+        }
+    };
+
+    const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget) {
+            setIsOverlayVisible(false);
         }
     };
 
     return (
-        <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Multiplayer Typing Game</h2>
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-            </div>
-            <div className="mb-4">
-                <select
-                    value={university}
-                    onChange={(e) => setUniversity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        <>
+            {isOverlayVisible && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={handleOutsideClick}
                 >
-                    <option value="">Select university (optional)</option>
-                    <option value="RUSL">
-                        Rajarata University of Sri Lanka
-                    </option>
-                    <option value="UoC">University of Colombo</option>
-                    <option value="UoP">University of Peradeniya</option>
-                    <option value="UoK">University of Kelaniya</option>
-                    <option value="UoJ">University of Jaffna</option>
-                    <option value="USJP">
-                        University of Sri Jayewardenepura
-                    </option>
-                    <option value="UoM">University of Moratuwa</option>
-
-                    <option value="OUSL">
-                        The Open University of Sri Lanka
-                    </option>
-                    <option value="EUSL">
-                        Eastern University of Sri Lanka
-                    </option>
-                    <option value="SUSL">
-                        Sabaragamuwa University of Sri Lanka
-                    </option>
-                    <option value="Other">Other</option>
-                </select>
+                    <PopupForm
+                        onSubmit={
+                            isCreatingGame ? handleCreateGame : handleJoinGame
+                        }
+                        onClose={() => setIsOverlayVisible(false)}
+                        buttonText={
+                            isCreatingGame ? "Create New Game" : "Join Game"
+                        }
+                    />
+                </div>
+            )}
+            <div className="grid grid-cols-2 gap-2 w-1/2 m-auto">
+                <h2 className="text-2xl font-bold text-center col-span-full">
+                    EXTRU Type Master 2025
+                </h2>
+                <div className="h-full w-full bg-white shadow-xl rounded-lg p-6">
+                    <button
+                        onClick={showCreateGamePopup}
+                        className="h-[87px]  block m-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Create New Game
+                    </button>
+                </div>
+                <div className="flex flex-col gap-y-2 bg-white shadow-md rounded-lg p-6">
+                    <div className="m-auto">
+                        <input
+                            type="text"
+                            placeholder="Enter game ID"
+                            value={gameId}
+                            onChange={(e) => setGameId(e.target.value)}
+                            className="w-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <button
+                        onClick={showJoinGamePopup}
+                        className="w-40 m-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Join Game
+                    </button>
+                    {warning && (
+                        <div className="mb-4 flex justify-center">
+                            <h3
+                                className={`text-red-500 ${
+                                    vibrating ? "vibrate" : ""
+                                }`}
+                            >
+                                Please Enter a Game ID to Continue
+                            </h3>
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className="mb-4">
-                <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                    <option value="">Select role (optional)</option>
-                    <option value="student">Student</option>
-                    <option value="staff">Staff</option>
-                    <option value="lecturer">Lecturer</option>
-                </select>
-            </div>
-            <div className="mb-4 flex items-center">
-                <input
-                    type="checkbox"
-                    id="isSchoolStudent"
-                    checked={isSchoolStudent}
-                    onChange={(e) => setIsSchoolStudent(e.target.checked)}
-                    className="mr-2"
-                />
-                <label htmlFor="isSchoolStudent">I am a school student</label>
-            </div>
-            <div className="mb-4">
-                <button
-                    onClick={handleCreateGame}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    Create New Game
-                </button>
-            </div>
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Enter game ID"
-                    value={gameId}
-                    onChange={(e) => setGameId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-            </div>
-            <div>
-                <button
-                    onClick={handleJoinGame}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    Join Game
-                </button>
-            </div>
-        </div>
+        </>
     );
 };
 

@@ -6,7 +6,7 @@ import MultiPlayerEndScreen from "./MultiPlayerEndScreen";
 
 interface MultiplayerLogicProps {
     gameId: string;
-    players: string[];
+    players: { id: string; name: string }[];
     paragraph: string[];
     socket: Socket;
     playerName: string;
@@ -143,7 +143,7 @@ const MultiplayerTest: React.FC<MultiplayerLogicProps> = ({
             if (currentLetterIndex === 0 && currentWordIndex > 0) {
                 setCurrentWordIndex(currentWordIndex - 1);
                 setCurrentLetterIndex(
-                    (prev) => tracking[currentWordIndex - 1]?.length || 0
+                    (prev) => tracking[currentWordIndex - 1]?.length || 0,
                 );
                 setTracking((prev) => prev.slice(0, -1));
                 return;
@@ -216,7 +216,7 @@ const MultiplayerTest: React.FC<MultiplayerLogicProps> = ({
                     <div className="timer">{timer}</div>
                     <div className="test relative">
                         <div
-                            className="paragraph flex gap-1 flex-wrap text-3xl tracking-wide gap-x-2 gap-y-3 text-gray-400 "
+                            className="paragraph flex flex-wrap gap-1 gap-x-2 gap-y-3 text-3xl tracking-wide text-gray-400"
                             tabIndex={0}
                             onKeyDown={handleInput}
                         >
