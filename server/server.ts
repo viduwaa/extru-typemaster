@@ -30,7 +30,7 @@ interface Game {
     players: { id: string; name: string ; avatar:string }[]; 
     paragraph: string[];
     started: boolean;
-    progress: { [key: string]: number };
+    progress: { player:string; progress:number }[];
     results: any[];
 }
 
@@ -52,7 +52,7 @@ io.on("connection", (socket) => {
 			players: [{ id: playerID, name: playerName , avatar:additionalInfo.selectedAvatar }],
 			paragraph: [],
 			started: false,
-			progress: {},
+			progress: [],
 			results: [],
 		};
 	
@@ -106,12 +106,17 @@ io.on("connection", (socket) => {
         }) => {
             const game = games[gameId];
             if (game) {
-                game.progress[playerName] = progress;
+                const playerIndex = game.progress.findIndex(p => p.player === playerName);
+                if (playerIndex !== -1) {
+                    game.progress[playerIndex].progress = progress;
+                } else {
+                    game.progress.push({ player: playerName, progress });
+                }
                 io.to(gameId).emit("progressUpdated", game.progress);
             }
         }
     );
-
+	
     socket.on(
         "gameEnded",
         ({ gameId, results }: { gameId: string; results: any }) => {

@@ -10,6 +10,15 @@ const SinglePlayerGame = () => {
     const [tracking, setTracking] = useState<string[][]>([]);
     const [timer, setTimer] = useState(30);
     const [isStarted, setIsStarted] = useState(false);
+    const [liveProgress, setLiveProgress] = useState(0);
+
+    const trackProgress = () => {
+        const totalCharacters = paragraph.join(" ").length;
+        const typedCharacters = tracking.reduce((count, word) => count + word.length, 0);
+        const progress = (typedCharacters / totalCharacters) * 100;
+        setLiveProgress(progress);
+    };
+    
 
     const correctOrIncorrect = (wordIndex: number, letterIndex: number) => {
         if (tracking[wordIndex] === undefined) return "text-gray-400";
@@ -126,6 +135,7 @@ const SinglePlayerGame = () => {
             setCurrentLetterIndex(currentLetterIndex + 1);
         }
 
+        trackProgress()
         //console.log(tracking);
     };
 

@@ -23,6 +23,7 @@ const MultiplayerGame: React.FC = () => {
     const [gameStarted, setGameStarted] = useState(false);
     const [gameParagraph, setGameParagraph] = useState<string[]>([]);
     const [playerName, setPlayerName] = useState<string>("");
+    const [currentPlayer, setCurrentPlayer] = useState<{ id: string; name: string } | null>(null);
 
 
     useEffect(() => {
@@ -65,6 +66,7 @@ const MultiplayerGame: React.FC = () => {
         additionalInfo,
     ) => {
         setPlayerName(playerName);
+        setCurrentPlayer({ id: playerID, name: playerName });
         setPlayers([
             {
                 id: playerID,
@@ -83,6 +85,7 @@ const MultiplayerGame: React.FC = () => {
         additionalInfo,
     ) => {
         setPlayerName(playerName);
+        setCurrentPlayer({ id: playerID, name: playerName });
         socket.emit("joinGame", {
             gameId,
             playerName,
@@ -145,6 +148,7 @@ const MultiplayerGame: React.FC = () => {
                     paragraph={gameParagraph}
                     socket={socket}
                     playerName={playerName}
+                    currentPlayer={currentPlayer}
                 />
             )}
         </div>
