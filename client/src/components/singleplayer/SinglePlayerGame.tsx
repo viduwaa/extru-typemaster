@@ -10,14 +10,13 @@ const SinglePlayerGame = () => {
     const [tracking, setTracking] = useState<string[][]>([]);
     const [timer, setTimer] = useState(30);
     const [isStarted, setIsStarted] = useState(false);
-    const [liveProgress, setLiveProgress] = useState(0);
+    /* const [liveProgress, setLiveProgress] = useState(0);
 
     const trackProgress = () => {
         const totalCharacters = paragraph.join(" ").length;
         const typedCharacters = tracking.reduce((count, word) => count + word.length, 0);
         const progress = (typedCharacters / totalCharacters) * 100;
-        setLiveProgress(progress);
-    };
+    }; */
     
 
     const correctOrIncorrect = (wordIndex: number, letterIndex: number) => {
@@ -89,8 +88,8 @@ const SinglePlayerGame = () => {
             e.key === " ";
         if (!isValidKey) return;
 
-        const isCorrectKey =
-            e.key === paragraph[currentWordIndex][currentLetterIndex];
+        /* const isCorrectKey =
+            e.key === paragraph[currentWordIndex][currentLetterIndex]; */
         const isSpaceKey = e.key === " ";
         const isBackspace = e.key === "Backspace";
 
@@ -102,7 +101,7 @@ const SinglePlayerGame = () => {
             if (currentLetterIndex === 0 && currentWordIndex > 0) {
                 setCurrentWordIndex(currentWordIndex - 1);
                 setCurrentLetterIndex(
-                    (prev) => tracking[currentWordIndex - 1]?.length || 0
+                    () => tracking[currentWordIndex - 1]?.length || 0
                 );
                 setTracking((prev) => prev.slice(0, -1));
                 return;
@@ -135,7 +134,6 @@ const SinglePlayerGame = () => {
             setCurrentLetterIndex(currentLetterIndex + 1);
         }
 
-        trackProgress()
         //console.log(tracking);
     };
 
