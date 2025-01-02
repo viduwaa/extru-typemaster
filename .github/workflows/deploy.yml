@@ -26,5 +26,5 @@ jobs:
         cd malkoha-type
         cd htdocs
         cd type.malkoha.site
-        git pull origin deploy
+        sudo git pull origin deploy
         EOF
