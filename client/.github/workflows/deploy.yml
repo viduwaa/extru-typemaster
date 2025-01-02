@@ -22,16 +22,20 @@ jobs:
 
     # Install dependencies
     - name: Install Dependencies
-      run: npm install
+      run: |
+        cd client
+        npm install
 
     # Build the project
     - name: Build Project
-      run: npm run build 
+      run: |
+        cd client
+        npm run build
 
     # Deploy to another branch
     - name: Deploy to Build Branch
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build 
+        publish_dir: ./client/build
         publish_branch: build-branch 
