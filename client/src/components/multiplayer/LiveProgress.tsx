@@ -19,7 +19,7 @@ interface PlayerRaceTrackProps {
 
 const cars = [Car1, Car2, Car3, Car4];
 
-const LiveProgress: React.FC<PlayerRaceTrackProps> = ({ players, allProgress,playerName ,currentPlayer}) => {
+const LiveProgress: React.FC<PlayerRaceTrackProps> = ({ players, allProgress ,currentPlayer}) => {
     return (
         <div className='racetrack flex flex-col gap-4 -mt-5 w-3/4 m-auto'>
             {players.map((player, index) => {

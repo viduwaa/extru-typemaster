@@ -150,8 +150,8 @@
                 e.key === " ";
             if (!isValidKey) return;
 
-            const isCorrectKey =
-                e.key === paragraph[currentWordIndex][currentLetterIndex];
+            /* const isCorrectKey =
+                e.key === paragraph[currentWordIndex][currentLetterIndex]; */
             const isSpaceKey = e.key === " ";
             const isBackspace = e.key === "Backspace";
 
@@ -164,7 +164,7 @@
                 if (currentLetterIndex === 0 && currentWordIndex > 0) {
                     setCurrentWordIndex(currentWordIndex - 1);
                     setCurrentLetterIndex(
-                        (prev) => tracking[currentWordIndex - 1]?.length || 0,
+                        () => tracking[currentWordIndex - 1]?.length || 0,
                     );
                     setTracking((prev) => prev.slice(0, -1));
                     return;
