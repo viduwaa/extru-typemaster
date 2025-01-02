@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import MultiplayerTest from "./MultiplayerTest";
 import { LobbyProps } from "../Lobby";
 
-const socket = io("http://localhost:3001", {
+const socket = io("http://localhost:3011", {
     withCredentials: true,
     transports: ["websocket", "polling"],
 });
