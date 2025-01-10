@@ -1,0 +1,100 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+
+body{
+    font-family: "Roboto Mono", monospace;
+    background-color: #fff2d5;
+}
+
+.paragraph {
+    font-family: "Roboto Mono", monospace;
+}
+
+.paragraph .word {
+    margin-right: 0.8rem;
+}
+
+.paragraph .word span {
+    transition: color 0.3s ease;
+}
+
+.paragraph .word span.text-green-500 {
+    color: #0cfa7b;
+}
+
+.paragraph .word span.text-red-500 {
+    color: #e95678;
+}
+
+/* HTML: <div class="loader"></div> */
+/* HTML: <div class="loader"></div> */
+.loader {
+    margin: auto;
+    width: 60%;
+    height: 50px;
+    background: repeating-linear-gradient(-45deg, #000 0 15px, #0000 0 20px)
+        left/200% 100%;
+    animation: l3 15s infinite linear;
+}
+@keyframes l3 {
+    100% {
+        background-position: right;
+    }
+}
+
+.fadein {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes vibrate {
+    0% {
+        transform: translate(0);
+    }
+    20% {
+        transform: translate(-2px, 2px);
+    }
+    40% {
+        transform: translate(-2px, -2px);
+    }
+    60% {
+        transform: translate(2px, 2px);
+    }
+    80% {
+        transform: translate(2px, -2px);
+    }
+    100% {
+        transform: translate(0);
+    }
+}
+
+.vibrate {
+    animation: vibrate 0.3s linear;
+}
+
+.glass {
+    /* From https://css.glass */
+background: rgba(0, 170, 255, 0.38);
+border-radius: 16px;
+box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+backdrop-filter: blur(13.7px);
+-webkit-backdrop-filter: blur(13.7px);
+border: 1px solid rgba(0, 170, 255, 0.4);
+}

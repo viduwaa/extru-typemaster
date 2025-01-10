@@ -1,9 +1,13 @@
-    import React, { useMemo, useState, useEffect } from "react";
+    import React, { useMemo, useState, useEffect, useRef } from "react";
     import BlinkingCursor from "../../utils/BlinkingCursor";
     import { Socket } from "socket.io-client";
     import { useMultiplayerResult } from "../../helpers/useMultiplayerResult";
     import MultiPlayerEndScreen from "./MultiPlayerEndScreen";
     import LiveProgress from "./LiveProgress";
+    import { AlertCircle } from "lucide-react";
+import { useLoader } from "../../utils/LoaderContext";
+import { useParagraph } from "../../helpers/useParagraph";
+import { gameTime } from '../../controllers/gameSettings';
 
     interface MultiplayerLogicProps {
         gameId: string;
@@ -30,30 +34,57 @@
         players,
         paragraph,
         socket,
-        playerName,
         currentPlayer
     }) => {
         const [currentWordIndex, setCurrentWordIndex] = useState(0);
         const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
         const [tracking, setTracking] = useState<string[][]>([]);
-        const [timer, setTimer] = useState(30);
+        const { isLoading } = useParagraph();
+        const [timer, setTimer] = useState(gameTime);
         const [isStarted, setIsStarted] = useState(false);
         const [endGame, setEndGame] = useState(false);
         const [finalResults, setFinalResults] = useState<ResultsProps[]>([]);
-        const [allProgress, setAllProgress] = useState<{player:string,progress:number}[]>([]);
+        const [allProgress, setAllProgress] = useState<{id:string,player:string,progress:number}[]>([]);
+        const focusRef = useRef<HTMLDivElement>(null)
+        const { showLoader, hideLoader } = useLoader();
+        const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
         const trackProgress = () => {
             const totalCharacters = paragraph.join(" ").length;
             const typedCharacters = tracking.reduce((count, word) => count + word.length, 0);
             const progress = (typedCharacters / totalCharacters) * 100;
-            socket.emit("updateProgress", { gameId, playerName, progress });
+            socket.emit("updateProgress", { gameId, currentPlayer, progress });
         };
+
+        useEffect(() => {
+                focusRef.current?.focus();
+                if (isLoading) {
+                    showLoader();
+                } else {
+                    hideLoader();
+                }
+            }, [isLoading, paragraph, showLoader, hideLoader]);
+        
+            useEffect(() => {
+                const checkCapsLock = (e: KeyboardEvent) => {
+                    setIsCapsLockOn(e.getModifierState('CapsLock'));
+                };
+        
+                window.addEventListener('keydown', checkCapsLock);
+                window.addEventListener('keyup', checkCapsLock);
+        
+                return () => {
+                    window.removeEventListener('keydown', checkCapsLock);
+                    window.removeEventListener('keyup', checkCapsLock);
+                };
+            }, []);
+        
     
         const { results } = useMultiplayerResult({
-            playerName,
+            currentPlayer: currentPlayer || { id: '', name: '' },
             typed: tracking,
             paragraph,
-            time: 30,
+            gameTime: gameTime,
         });
     
         const gameEnded = () => {
@@ -71,7 +102,7 @@
                 });
             }
     
-            socket.on("progressUpdated", (allProgress: {player:string,progress:number}[]) => {
+            socket.on("progressUpdated", (allProgress: {id:string,player:string,progress:number}[]) => {
                 setAllProgress(allProgress);
             });
     
@@ -82,46 +113,46 @@
         }, [socket, endGame]);
 
         const correctOrIncorrect = (wordIndex: number, letterIndex: number) => {
-            if (tracking[wordIndex] === undefined) return "text-gray-400";
+            if (tracking[wordIndex] === undefined) return "text-letter-unchecked";
             if (tracking[wordIndex][letterIndex] === undefined)
-                return "text-gray-400";
+                return "text-letter-unchecked";
             if (
                 paragraph[wordIndex][letterIndex] ===
                 tracking[wordIndex][letterIndex]
             )
-                return "text-green-500";
-            return "text-red-500";
+                return "text-letter-correct";
+            return "text-letter-incorrect";
         };
 
         const extraIncorrect = (wordIndex: number): JSX.Element[] | undefined => {
             const currentWord = tracking[wordIndex];
             const expectedLength = paragraph[wordIndex]?.length;
-
+    
             if (!currentWord || !expectedLength) return;
-
+    
             const extraLetters = currentWord.slice(expectedLength);
-
+    
             return extraLetters.map((letter, index) => (
-                <span key={index} className="text-red-500">
+                <span key={index} className="text-letter-incorrect">
                     {letter}
                 </span>
             ));
         };
 
         const inCompletedWord = (wordIndex: number) => {
-            // Only check words that user has moved past
-            if (wordIndex >= currentWordIndex) return "";
+        // Only check words that user has moved past
+        if (wordIndex >= currentWordIndex) return "";
 
-            // Check if word exists and lengths don't match
-            if (tracking[wordIndex] === undefined) return "";
-            if (
-                tracking[wordIndex].length !== paragraph[wordIndex].length ||
-                paragraph[wordIndex] !== tracking[wordIndex].join("")
-            ) {
-                return "underline decoration-red-500";
-            }
-            return "";
-        };
+        // Check if word exists and lengths don't match
+        if (tracking[wordIndex] === undefined) return "";
+        if (
+            tracking[wordIndex].length !== paragraph[wordIndex].length ||
+            paragraph[wordIndex] !== tracking[wordIndex].join("")
+        ) {
+            return "underline decoration-letter-incorrect";
+        }
+        return "";
+    };
 
         const renderParagraph = useMemo(() => {
             return paragraph.map((word, wordIndex) => (
@@ -207,6 +238,7 @@
 
         useEffect(() => {
             let intervalId: NodeJS.Timeout;
+            focusRef.current?.focus();
 
             if (isStarted && timer > 0) {
                 intervalId = setInterval(() => {
@@ -235,14 +267,23 @@
                     </>
                 ) : (
                     <>
-                        <LiveProgress players={players} allProgress={allProgress} playerName ={playerName} currentPlayer={currentPlayer} />
-                        <div className="timer">{timer}</div>
-                        <div className="test relative">
+                        <LiveProgress players={players} allProgress={allProgress} currentPlayer={currentPlayer} />
+                        
+                        <div className="test  test fadein relative rounded-lg shadow-lg transition-all ease-in pb-12 font-mono">
+                        <div className="absolute top-5 left-8 timer fadein text-3xl text-letter-unchecked">{timer}</div>
+                            {isCapsLockOn && (  
+                                                                <div className="absolute p-2 text-xl top-5 right-[45%] fadein flex items-center bg-yellow-400">
+                                                                    <AlertCircle className="mr-2" color="black"/>
+                                                                    <span className="text-black">Caps Lock is ON</span>
+                                                                </div>
+                                                            )}
                             <div
-                                className="paragraph flex flex-wrap gap-1 gap-x-2 gap-y-3 text-3xl tracking-wide text-gray-400"
+                                ref={focusRef}
+                                className="paragraph mx-auto flex w-full flex-wrap   px-8 pt-16 pb-8  text-4xl leading-relaxed tracking-wide text-[#0061fe]  outline-none hover:cursor-default   h-[350px] overflow-clip"
                                 tabIndex={0}
                                 onKeyDown={handleInput}
                             >
+                                
                                 {renderParagraph}
                             </div>
                             <BlinkingCursor

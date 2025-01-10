@@ -4,6 +4,7 @@ import Lobby from "../Lobby";
 import io from "socket.io-client";
 import MultiplayerTest from "./MultiplayerTest";
 import { LobbyProps } from "../Lobby";
+import { useLoader } from '../../utils/LoaderContext';
 
 const socket = io("http://localhost:3011", {
     withCredentials: true,
@@ -19,12 +20,21 @@ interface Player {
 const MultiplayerGame: React.FC = () => {
     const [gameId, setGameId] = useState<string | null>(null);
     const [players, setPlayers] = useState<Player[]>([]);
-    const { paragraph } = useParagraph();
+    const { paragraph,isLoading } = useParagraph();
     const [gameStarted, setGameStarted] = useState(false);
     const [gameParagraph, setGameParagraph] = useState<string[]>([]);
     const [playerName, setPlayerName] = useState<string>("");
     const [currentPlayer, setCurrentPlayer] = useState<{ id: string; name: string } | null>(null);
+    const { showLoader, hideLoader } = useLoader();
 
+    useEffect(() => {
+        if (isLoading) {
+          showLoader(); 
+        } else {
+          hideLoader();
+          
+        }
+      }, [isLoading, paragraph, showLoader, hideLoader]);
 
     useEffect(() => {
         socket.on("gameCreated", (id: string) => {

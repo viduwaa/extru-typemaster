@@ -47,7 +47,7 @@ const BlinkingCursor: React.FC<CursorProps> = ({
                     // If we're beyond the end of the expected word, measure the extra letters
                     if (currentWordLength > currentWord.length) {
                         const extraLetters =
-                            wordElement.querySelectorAll("span.text-red-500");
+                            wordElement.querySelectorAll("span.text-letter-incorrect");
                         const extraWidth = Array.from(extraLetters).reduce(
                             (width, span) => {
                                 return (
@@ -73,14 +73,14 @@ const BlinkingCursor: React.FC<CursorProps> = ({
     return (
         <div
             ref={cursorRef}
-            className="typing-cursor"
+            className="typing-cursor bg-letter-unchecked"
             style={{
                 position: "absolute",
                 left: `${position.left}px`,
-                top: `${position.top}px`,
-                width: "2px",
-                height: "36px",
-                backgroundColor: "currentColor",
+                top: `${position.top+10}px`,
+                width: "3px",
+                height: "42px",
+                
                 animation: "blink 0.9s infinite",
             }}
             aria-hidden="true"

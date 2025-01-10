@@ -1,15 +1,20 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useParagraph } from "../../helpers/useParagraph";
 import BlinkingCursor from "../../utils/BlinkingCursor";
 import Results from "./Results";
+import { useLoader } from "../../utils/LoaderContext";
+import { AlertCircle } from "lucide-react";
 
 const SinglePlayerGame = () => {
-    const { paragraph } = useParagraph();
+    const { paragraph, isLoading } = useParagraph();
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
     const [tracking, setTracking] = useState<string[][]>([]);
     const [timer, setTimer] = useState(30);
     const [isStarted, setIsStarted] = useState(false);
+    const focusRef = useRef<HTMLDivElement>(null);
+    const { showLoader, hideLoader } = useLoader();
+    const [isCapsLockOn, setIsCapsLockOn] = useState(false);
     /* const [liveProgress, setLiveProgress] = useState(0);
 
     const trackProgress = () => {
@@ -17,18 +22,40 @@ const SinglePlayerGame = () => {
         const typedCharacters = tracking.reduce((count, word) => count + word.length, 0);
         const progress = (typedCharacters / totalCharacters) * 100;
     }; */
-    
+
+    useEffect(() => {
+        focusRef.current?.focus();
+        if (isLoading) {
+            showLoader();
+        } else {
+            hideLoader();
+        }
+    }, [isLoading, paragraph, showLoader, hideLoader]);
+
+    useEffect(() => {
+        const checkCapsLock = (e: KeyboardEvent) => {
+            setIsCapsLockOn(e.getModifierState('CapsLock'));
+        };
+
+        window.addEventListener('keydown', checkCapsLock);
+        window.addEventListener('keyup', checkCapsLock);
+
+        return () => {
+            window.removeEventListener('keydown', checkCapsLock);
+            window.removeEventListener('keyup', checkCapsLock);
+        };
+    }, []);
 
     const correctOrIncorrect = (wordIndex: number, letterIndex: number) => {
-        if (tracking[wordIndex] === undefined) return "text-gray-400";
+        if (tracking[wordIndex] === undefined) return "text-letter-unchecked";
         if (tracking[wordIndex][letterIndex] === undefined)
-            return "text-gray-400";
+            return "text-letter-unchecked";
         if (
             paragraph[wordIndex][letterIndex] ===
             tracking[wordIndex][letterIndex]
         )
-            return "text-green-500";
-        return "text-red-500";
+            return "text-letter-correct";
+        return "text-letter-incorrect";
     };
 
     const extraIncorrect = (wordIndex: number): JSX.Element[] | undefined => {
@@ -40,7 +67,7 @@ const SinglePlayerGame = () => {
         const extraLetters = currentWord.slice(expectedLength);
 
         return extraLetters.map((letter, index) => (
-            <span key={index} className="text-red-500">
+            <span key={index} className="text-letter-incorrect">
                 {letter}
             </span>
         ));
@@ -56,7 +83,7 @@ const SinglePlayerGame = () => {
             tracking[wordIndex].length !== paragraph[wordIndex].length ||
             paragraph[wordIndex] !== tracking[wordIndex].join("")
         ) {
-            return "underline decoration-red-500";
+            return "underline decoration-letter-incorrect";
         }
         return "";
     };
@@ -101,7 +128,7 @@ const SinglePlayerGame = () => {
             if (currentLetterIndex === 0 && currentWordIndex > 0) {
                 setCurrentWordIndex(currentWordIndex - 1);
                 setCurrentLetterIndex(
-                    () => tracking[currentWordIndex - 1]?.length || 0
+                    () => tracking[currentWordIndex - 1]?.length || 0,
                 );
                 setTracking((prev) => prev.slice(0, -1));
                 return;
@@ -142,6 +169,7 @@ const SinglePlayerGame = () => {
     };
 
     useEffect(() => {
+        
         let intervalId: NodeJS.Timeout;
 
         if (isStarted && timer > 0) {
@@ -164,22 +192,34 @@ const SinglePlayerGame = () => {
                 </>
             ) : (
                 <>
-                    <div className="timer">{timer}</div>
-                    <div className="test relative">
-                        <div
-                            className="paragraph flex gap-1 flex-wrap text-3xl tracking-wide gap-x-2 gap-y-3 text-gray-400 "
-                            tabIndex={0}
-                            onKeyDown={handleInput}
-                        >
-                            {renderParagraph}
-                        </div>
-                        <BlinkingCursor
-                            wordIndex={currentWordIndex}
-                            letterIndex={currentLetterIndex}
-                            text={paragraph.join(" ")}
-                            currentWordLength={getCurrentWordLength()}
-                        />
-                    </div>
+                    {!isLoading && (
+                        <>
+                            
+                            <div className=" test fadein relative rounded-lg shadow-lg transition-all ease-in pb-12 font-mono" >
+                                <div className=" absolute top-5 left-8 timer fadein text-3xl text-letter-unchecked">{timer}</div>
+                                {isCapsLockOn && (  
+                                    <div className="absolute p-2 text-xl top-5 right-[45%] fadein flex items-center bg-yellow-400">
+                                        <AlertCircle className="mr-2" color="black"/>
+                                        <span className="text-black">Caps Lock is ON</span>
+                                    </div>
+                                )}
+                                <div
+                                    ref={focusRef}
+                                    className="paragraph mx-auto flex w-full flex-wrap   px-8 pt-16 pb-8  text-4xl leading-relaxed tracking-wide text-[#0061fe]  outline-none hover:cursor-default   h-[350px] overflow-clip"
+                                    tabIndex={0}
+                                    onKeyDown={handleInput}
+                                >
+                                    {renderParagraph}
+                                </div>
+                                <BlinkingCursor
+                                    wordIndex={currentWordIndex}
+                                    letterIndex={currentLetterIndex}
+                                    text={paragraph.join(" ")}
+                                    currentWordLength={getCurrentWordLength()}
+                                />
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </>
