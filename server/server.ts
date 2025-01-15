@@ -5,21 +5,57 @@ import cors from "cors";
 import { getTopPlayers, insertGameResults } from "./db/queries";
 import pool from "./db/config";
 import { Game,GameResult } from "./types";
+import axios from "axios";
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(
     cors({
-        origin: "http://localhost:3000",
+        origin: "http://localhost:5173",
         methods: ["GET", "POST"],
         credentials: true,
     })
 );
 
+app.get('/api/paragraphs', async (req, res) => {
+    try {
+        const response = await axios.get('http://metaphorpsum.com/paragraphs/2/4');
+        
+        /* console.log('Metaphorpsum response:', {
+            status: response.status,
+            data: response.data
+        }); */
+        
+        res.setHeader('Content-Type', 'text/plain');
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {  // Type guard for Axios errors
+            console.error('Proxy error:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+        } else {
+            console.error('Unexpected error:', error);
+        }
+        res.status(500).send('Error fetching paragraphs');
+    }
+});
+
+app.get("/api/leaderboard", async (req, res) => {
+    try {
+        const leaderboard = await getTopPlayers(pool);
+        res.json(leaderboard);
+    } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+});
+
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "http://localhost:5173",
         methods: ["GET", "POST"],
         credentials: true,
         allowedHeaders: ["my-custom-header"],
@@ -27,6 +63,8 @@ const io = new Server(server, {
     pingTimeout: 60000,
     transports: ["websocket", "polling"],
 });
+
+
 
 const games: { [key: string]: Game } = {};
 
