@@ -19,21 +19,26 @@ export const useMultiplayerResult  = ({ currentPlayer, typed, paragraph, gameTim
     });
 
     useMemo(() => {
-        let typedWords = typed.length;
-        let correctWords = 0;
+        const typedCharacters = typed.flat();
+        const expectedCharacters = paragraph.join('').split(''); 
 
-        typed.forEach((typedWord, wordIndex) => {
-            const expectedWord = paragraph[wordIndex] || '';
-            if(typedWord.join('') === expectedWord){
-                correctWords++;
+        
+        // Count total characters typed and correct characters
+        const totalTyped = typedCharacters.length;
+        let correctCharacters = 0;
+
+        typedCharacters.forEach((char, index) => {
+            if (char === expectedCharacters[index]) {
+                correctCharacters++;
             }
         });
 
-        //console.log(typedWords, correctWords , paragraph , typed);
-        const minutes = gameTime / 60; 
-        const rawWPM = Math.round(typedWords/minutes);
-        const correctWPM = Math.round(correctWords/ minutes);
-        const accuracy = Math.round((correctWords / typedWords) * 100)
+        // Calculate WPM and accuracy
+        const minutes = gameTime / 60;
+        const rawWPM = Math.round(totalTyped / 5 / minutes); // Raw WPM based on typed characters
+        const correctWPM = Math.round(correctCharacters / 5 / minutes); // Correct WPM based on correct characters
+        const accuracy = totalTyped > 0 ? Math.round((correctCharacters / totalTyped) * 100) : 0;
+
 
         setResults({ id: currentPlayer.id, playerName: currentPlayer.name, rawWPM, correctWPM, accuracy });
         return { rawWPM, correctWPM, accuracy };

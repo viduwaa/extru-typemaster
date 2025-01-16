@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useState, useEffect } from 'react'
-import { io, Socket } from 'socket.io-client'
+import { io } from 'socket.io-client'
 
 export interface LeaderboardPlayer {
   unique_id: string
@@ -13,13 +13,18 @@ export interface LeaderboardPlayer {
   created_at: string
 }
 
+const socket = io("https://type.malkoha.site:3011", {
+    withCredentials: true,
+    transports: ["websocket", "polling"],
+});
+
 export const useLeaderboard = () => {
   const [players, setPlayers] = useState<LeaderboardPlayer[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const socket: Socket = io('http://localhost:3011')
+    
 
     setLoading(true);
     axios
