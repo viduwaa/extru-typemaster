@@ -6,7 +6,7 @@ import MultiplayerTest from "./MultiplayerTest";
 import { LobbyProps } from "../Lobby";
 import { useLoader } from '../../utils/LoaderContext';
 
-const socket = io("http://localhost:3011", {
+const socket = io(import.meta.env.VITE_SERVER_URI, {
     withCredentials: true,
     transports: ["websocket", "polling"],
 });
@@ -111,7 +111,7 @@ const MultiplayerGame: React.FC = () => {
     };
 
     return (
-        <div className="container relative mx-auto px-4 py-8">
+        <div className="container relative mx-auto px-4 py-2">
             {!gameId && <Lobby createGame={createGame} joinGame={joinGame} />}
             {gameId && !gameStarted && (
                 <div className="rounded-lg bg-white p-6 shadow-md">
@@ -129,7 +129,7 @@ const MultiplayerGame: React.FC = () => {
                     <div className="flex">
                         {players.map((player) => (
                             <div
-                                className="flex flex-col items-center gap-2"
+                                className="flex flex-col items-center gap-2 w-[112px] text-wrap text-center"
                                 key={player.id}
                             >
                                 <img

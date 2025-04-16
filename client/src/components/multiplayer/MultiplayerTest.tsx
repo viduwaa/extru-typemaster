@@ -69,7 +69,6 @@ const MultiplayerTest: React.FC<MultiplayerLogicProps> = ({
             hideLoader();
         }
     }, [isLoading, paragraph, showLoader, hideLoader]);
-    console.log(paragraph)
 
     useEffect(() => {
         const checkCapsLock = (e: KeyboardEvent) => {
@@ -296,7 +295,7 @@ const MultiplayerTest: React.FC<MultiplayerLogicProps> = ({
                         )}
                         <div
                             ref={focusRef}
-                            className="paragraph mx-auto flex h-[350px] w-full flex-wrap overflow-clip px-8 pb-8 pt-16 text-4xl leading-relaxed tracking-wide text-[#0061fe] outline-none hover:cursor-default"
+                            className="paragraph mx-auto flex h-[350px] w-full flex-wrap overflow-clip px-8 pb-8 pt-16 text-3xl leading-relaxed tracking-wide text-[#0061fe] outline-none hover:cursor-default"
                             tabIndex={0}
                             onKeyDown={handleInput}
                         >

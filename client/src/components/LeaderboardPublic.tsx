@@ -11,11 +11,11 @@ import {
   TrendingUp,
   PersonStanding 
 } from "lucide-react";
-import { useLeaderboard } from "../helpers/useLeaderboard";
+import { useLeaderboard } from "../helpers/useLeaderboardPublic";
 import { useLoader } from "../utils/LoaderContext";
 import qr from "../assets/qr.jpg";
 
-const Leaderboard: React.FC = () => {
+const LeaderboardPublic: React.FC = () => {
   const { players, averageWPM, loading,totalPlayers, error } = useLeaderboard();
   const { showLoader, hideLoader } = useLoader();
 
@@ -49,9 +49,9 @@ const Leaderboard: React.FC = () => {
         <div className="flex-1 overflow-hidden rounded-2xl bg-white shadow-xl">
           <div className="space-y-2 border-b border-gray-200 p-6 text-center">
             <h1 className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-3xl font-bold text-transparent md:text-4xl">
-              TypeMaster Leaderboard
+              TypeMaster Leaderboard - Public
             </h1>
-            <p className="text-gray-600">Top performers in Extru 2025</p>
+            <p className="text-gray-600">Top performers</p>
           </div>
           <div className="p-6">
             <AnimatePresence>
@@ -203,4 +203,4 @@ const Leaderboard: React.FC = () => {
   );
 };
 
-export default Leaderboard;
+export default LeaderboardPublic;

@@ -1,1 +1,1 @@
-export const gameTime:number = 30;
+export const gameTime:number = 60;

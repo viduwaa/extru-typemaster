@@ -98,3 +98,18 @@ backdrop-filter: blur(13.7px);
 -webkit-backdrop-filter: blur(13.7px);
 border: 1px solid rgba(0, 170, 255, 0.4);
 }
+
+
+.glowing-logo {
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+    animation: glow-animation 2s infinite alternate;
+  }
+  
+  @keyframes glow-animation {
+    from {
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+    }
+    to {
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 1));
+    }
+  }

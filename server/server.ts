@@ -2,44 +2,53 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import { getTopPlayers, insertGameResults } from "./db/queries";
+import { getTopPlayers, insertGameResults , getTotalPlayers, getPublicTopPlayers, getPublicTotalPlayers } from "./db/queries";
 import pool from "./db/config";
-import { Game,GameResult } from "./types";
+import type { Game, GameResult } from "./types";
 import axios from "axios";
+import { setupWPMGraph } from "./wpmGraph";
+import { RowDataPacket, Pool } from "mysql2/promise";
+require('dotenv').config();
+
+const clientURI = process.env.CLIENT_URI;
+console.log("Client URI:", clientURI);
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: clientURI,
         methods: ["GET", "POST"],
         credentials: true,
     })
 );
 
-app.get('/api/paragraphs', async (req, res) => {
+app.get("/api/paragraphs", async (req, res) => {
     try {
-        const response = await axios.get('http://metaphorpsum.com/paragraphs/2/4');
-        
+        const response = await axios.get(
+            "http://metaphorpsum.com/paragraphs/2/4"
+        );
+
         /* console.log('Metaphorpsum response:', {
             status: response.status,
             data: response.data
         }); */
-        
-        res.setHeader('Content-Type', 'text/plain');
+
+        res.setHeader("Content-Type", "text/plain");
         res.status(200).send(response.data);
     } catch (error) {
-        if (axios.isAxiosError(error)) {  // Type guard for Axios errors
-            console.error('Proxy error:', {
+        if (axios.isAxiosError(error)) {
+            // Type guard for Axios errors
+            console.error("Proxy error:", {
                 message: error.message,
                 response: error.response?.data,
-                status: error.response?.status
+                status: error.response?.status,
             });
         } else {
-            console.error('Unexpected error:', error);
+            console.error("Unexpected error:", error);
         }
-        res.status(500).send('Error fetching paragraphs');
+        res.status(500).send("Error fetching paragraphs");
     }
 });
 
@@ -53,9 +62,61 @@ app.get("/api/leaderboard", async (req, res) => {
     }
 });
 
+app.get("/api/leaderboard-public", async (req, res) => {
+    try {
+        const leaderboard = await getPublicTopPlayers(pool);
+        res.json(leaderboard);
+    } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+});
+
+app.get("/api/totalplayers", async (req, res) => {
+    try {
+        const totalPlayers = await getTotalPlayers(pool);
+        res.json({ totalPlayers });
+    } catch (error) {
+        console.error("Error fetching total players:", error);
+        res.status(500).json({ error: "Failed to fetch total players" });
+    }
+});
+
+app.get("/api/totalplayers-public", async (req, res) => {
+    try {
+        const totalPlayers = await getPublicTotalPlayers(pool);
+        res.json({ totalPlayers });
+    } catch (error) {
+        console.error("Error fetching total players:", error);
+        res.status(500).json({ error: "Failed to fetch total players" });
+    }
+});
+
+app.get("/api/averagewpm", async (req, res)=>{
+  console.log("Received request for /api/averagewpm");
+  try {
+    const averageWPM = await calculateAverageWPM(pool);
+    res.json(averageWPM);
+  }catch(error){
+    console.error("Error fetching average WPM:", error);
+    res.status(500).json({ error: "Failed to fetch average WPM" });
+  }
+});
+
+app.get("/api/averagewpm-public", async (req, res)=>{
+    console.log("Received request for /api/averagewpm");
+    try {
+      const averageWPM = await calculateAverageWPMPublic(pool);
+      res.json(averageWPM);
+    }catch(error){
+      console.error("Error fetching average WPM:", error);
+      res.status(500).json({ error: "Failed to fetch average WPM" });
+    }
+  });
+
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: clientURI,
         methods: ["GET", "POST"],
         credentials: true,
         allowedHeaders: ["my-custom-header"],
@@ -63,7 +124,6 @@ const io = new Server(server, {
     pingTimeout: 60000,
     transports: ["websocket", "polling"],
 });
-
 
 
 const games: { [key: string]: Game } = {};
@@ -77,7 +137,7 @@ io.on("connection", (socket) => {
             return;
         }
 
-        const gameId = Math.random().toString(36).substring(2, 8);
+        const gameId = Math.floor(100000 + Math.random() * 900000).toString();
 
         games[gameId] = {
             id: gameId,
@@ -178,7 +238,13 @@ io.on("connection", (socket) => {
 
     socket.on(
         "gameEnded",
-        async ({ gameId, results }: { gameId: string; results: GameResult }) => {
+        async ({
+            gameId,
+            results,
+        }: {
+            gameId: string;
+            results: GameResult;
+        }) => {
             const game = games[gameId];
             if (game) {
                 game.results.push(results);
@@ -189,18 +255,27 @@ io.on("connection", (socket) => {
                     try {
                         await insertGameResults(pool, game);
 
-                        // Get updated leaderboard
-                        const leaderboard = await getTopPlayers(pool);
+                        // Get updated leaderboard - Extru
+                        /* const leaderboard = await getTopPlayers(pool);
+                      	const totalPlayers = await getTotalPlayers(pool); */
+
+                        const leaderboard = await getPublicTopPlayers(pool);
+                      	const totalPlayers = await getPublicTotalPlayers(pool); 
 
                         // Emit updated leaderboard to all connected clients
                         io.emit("leaderboardUpdate", leaderboard);
+                       	io.emit("totalPlayersUpdate",totalPlayers)
+
+                        // Recalculate and emit average WPM
+                        const averageWPM = await calculateAverageWPM(pool);
+                        io.emit("averageWPM", averageWPM);
+
                         delete games[gameId];
                     } catch (error) {
                         console.error("Error handling game end:", error);
                         socket.emit("error", "Failed to save game results");
-                        
                     }
-                }else{
+                } else {
                     return;
                 }
             }
@@ -216,3 +291,61 @@ const PORT = process.env.PORT || 3011;
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+async function calculateAverageWPM(pool: Pool) {
+    // Type the pool parameter
+    try {
+        const [result] = await pool.query<
+            RowDataPacket[] & { average_wpm: number }[]
+        >("SELECT CAST(AVG(wpm) AS DECIMAL(10, 1)) AS average_wpm FROM mp_leaderboard;");
+
+        if (
+            result &&
+            Array.isArray(result) &&
+            result.length > 0 &&
+            result[0] &&
+            "average_wpm" in result[0] &&
+            result[0].average_wpm !== null
+        ) {
+            return result[0].average_wpm;
+        } else {
+            console.warn(
+                "No data returned or unexpected result format:",
+                result
+            );
+            return null;
+        }
+    } catch (error) {
+        console.error("Error calculating average WPM:", error);
+        return null;
+    }
+}
+
+async function calculateAverageWPMPublic(pool: Pool) {
+    // Type the pool parameter
+    try {
+        const [result] = await pool.query<
+            RowDataPacket[] & { average_wpm: number }[]
+        >("SELECT CAST(AVG(wpm) AS DECIMAL(10, 1)) AS average_wpm FROM mp_leaderboardPublic;");
+
+        if (
+            result &&
+            Array.isArray(result) &&
+            result.length > 0 &&
+            result[0] &&
+            "average_wpm" in result[0] &&
+            result[0].average_wpm !== null
+        ) {
+            return result[0].average_wpm;
+        } else {
+            console.warn(
+                "No data returned or unexpected result format:",
+                result
+            );
+            return null;
+        }
+    } catch (error) {
+        console.error("Error calculating average WPM:", error);
+        return null;
+    }
+}

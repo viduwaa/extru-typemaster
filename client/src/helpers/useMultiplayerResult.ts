@@ -39,6 +39,9 @@ export const useMultiplayerResult  = ({ currentPlayer, typed, paragraph, gameTim
         const correctWPM = Math.round(correctCharacters / 5 / minutes); // Correct WPM based on correct characters
         const accuracy = totalTyped > 0 ? Math.round((correctCharacters / totalTyped) * 100) : 0;
 
+        console.log(correctCharacters)
+        console.log(totalTyped)
+
 
         setResults({ id: currentPlayer.id, playerName: currentPlayer.name, rawWPM, correctWPM, accuracy });
         return { rawWPM, correctWPM, accuracy };

@@ -30,9 +30,9 @@ export const useLeaderboard = () => {
 
     // Fetch leaderboard, average WPM, and total players in parallel
     Promise.all([
-      axios.get(import.meta.env.VITE_SERVER_URI + '/api/leaderboard'),
-      axios.get(import.meta.env.VITE_SERVER_URI + '/api/averagewpm'),
-      axios.get(import.meta.env.VITE_SERVER_URI + '/api/totalplayers'), // Fetch total players
+      axios.get(import.meta.env.VITE_SERVER_URI + '/api/leaderboard-public'),
+      axios.get(import.meta.env.VITE_SERVER_URI + '/api/averagewpm-public'),
+      axios.get(import.meta.env.VITE_SERVER_URI + '/api/totalplayers-public'), // Fetch total players
     ])
       .then(([leaderboardResponse, averageWPMResponse, totalPlayersResponse]) => {
         setPlayers(leaderboardResponse.data);

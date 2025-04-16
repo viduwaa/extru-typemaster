@@ -39,7 +39,7 @@ export const useParagraph = () => {
     const fetchParagraph = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:3011/api/paragraphs');
+        const response = await fetch(import.meta.env.VITE_SERVER_URI+'/api/paragraphs');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

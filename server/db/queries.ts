@@ -37,7 +37,7 @@ export const insertGameResults = async (pool: mysql.Pool, game: Game) => {
 
     // Bulk insert players with ON DUPLICATE KEY UPDATE
     const playerQuery = `
-      INSERT INTO mp_players (
+      INSERT INTO mp_playersPublic (
         unique_id, name, avatar, university, role, school_student, created_at
       ) VALUES ? 
       ON DUPLICATE KEY UPDATE 
@@ -61,7 +61,7 @@ export const insertGameResults = async (pool: mysql.Pool, game: Game) => {
 
     // Bulk insert leaderboard entries
     const leaderboardQuery = `
-      INSERT INTO mp_leaderboard (
+      INSERT INTO mp_leaderboardPublic (
         player_id, wpm, accuracy, created_at
       ) VALUES ?
     `;
@@ -100,6 +100,50 @@ export const getTopPlayers = async (pool: mysql.Pool, limit: number = 10) => {
 
   const [rows] = await pool.query(query, [limit]);
   return rows;
+};
+
+
+export const getPublicTopPlayers = async (pool: mysql.Pool, limit: number = 10) => {
+  const query = `
+    SELECT 
+      mp.unique_id,
+      mp.name,
+      mp.avatar,
+      mp.university,
+      mp.role,
+      ml.wpm,
+      ml.accuracy,
+      ml.created_at
+    FROM mp_leaderboardPublic ml
+    JOIN mp_playersPublic mp ON ml.player_id = mp.unique_id
+    ORDER BY ml.wpm DESC, ml.accuracy DESC
+    LIMIT ?
+  `;
+
+  const [rows] = await pool.query(query, [limit]);
+  return rows;
+};
+  
+  export const getTotalPlayers = async (pool: mysql.Pool): Promise<number> => {
+  const query = `
+    SELECT COUNT(*) as totalPlayers FROM mp_players
+  `;
+
+  const [rows] = await pool.query<mysql.RowDataPacket[]>(query);
+  const totalPlayers = rows[0].totalPlayers as number;
+
+  return totalPlayers;
+};
+
+export const getPublicTotalPlayers = async (pool: mysql.Pool): Promise<number> => {
+  const query = `
+    SELECT COUNT(*) as totalPlayers FROM mp_playersPublic
+  `;
+
+  const [rows] = await pool.query<mysql.RowDataPacket[]>(query);
+  const totalPlayers = rows[0].totalPlayers as number;
+
+  return totalPlayers;
 };
 
 
